@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Iterable, Set
+from typing import Iterable
 
 
 def seat_id_generator(path: Path) -> Iterable[int]:
