@@ -25,9 +25,9 @@ class Amphipod:
         if self.movement_cost == 1000:
             return "D"
 
-    @property
-    def is_lower(self):
-        return self.place_in_room == 1
+    # @property
+    # def is_lower(self):
+    #     return self.place_in_room == 1
 
 
 @dataclass
@@ -35,20 +35,15 @@ class Room:
     room_num: int
     target_cost: int
 
-    # amphipods: List[Amphipod]
-
-    higher_amphipod: Optional[Amphipod]
-    lower_amphipod: Optional[Amphipod]
+    amphipods: List[Amphipod]
 
     @property
     def is_empty(self) -> bool:
-        # return not any(self.amphipods)
-        return self.lower_amphipod is None
+        return not any(self.amphipods)
 
     @property
     def is_full(self) -> bool:
-        # return self.amphipods[0] is not None
-        return self.higher_amphipod is not None
+        return self.amphipods[0] is not None
 
     # @property
     # def higher_amphipod(self):
@@ -66,18 +61,64 @@ def parse_input_file(path: Path) -> Dict[int, Room]:
     #     6: Room(6, 100, [Amphipod(10, 6, 0, None), Amphipod(100, 6, 1, None)]),
     #     8: Room(8, 1000, [Amphipod(1000, 8, 0, None), Amphipod(1, 8, 1, None)])
     # }
-    return {
-        2: Room(2, 1, Amphipod(10, 2, 0, None), Amphipod(1, 2, 1, None)),
-        4: Room(4, 10, Amphipod(100, 4, 0, None), Amphipod(1000, 4, 1, None)),
-        6: Room(6, 100, Amphipod(10, 6, 0, None), Amphipod(100, 6, 1, None)),
-        8: Room(8, 1000, Amphipod(1000, 8, 0, None), Amphipod(1, 8, 1, None))
-    }
     # return {
     #     2: Room(2, 1, [Amphipod(1000, 2, 0, None), Amphipod(100, 2, 1, None)]),
     #     4: Room(4, 10, [Amphipod(10, 4, 0, None), Amphipod(100, 4, 1, None)]),
     #     6: Room(6, 100, [Amphipod(10, 6, 0, None), Amphipod(1000, 6, 1, None)]),
     #     8: Room(8, 1000, [Amphipod(1, 8, 0, None), Amphipod(1, 8, 1, None)])
     # }
+    # return {
+    #     2: Room(2, 1, [
+    #         Amphipod(10, 2, 0, None),
+    #         Amphipod(1000, 2, 1, None),
+    #         Amphipod(1000, 2, 2, None),
+    #         Amphipod(1, 2, 3, None),
+    #     ]),
+    #     4: Room(4, 10, [
+    #         Amphipod(100, 4, 0, None),
+    #         Amphipod(100, 4, 1, None),
+    #         Amphipod(10, 4, 2, None),
+    #         Amphipod(1000, 4, 3, None),
+    #     ]),
+    #     6: Room(6, 100, [
+    #         Amphipod(10, 6, 0, None),
+    #         Amphipod(10, 6, 1, None),
+    #         Amphipod(1, 6, 2, None),
+    #         Amphipod(100, 6, 3, None),
+    #     ]),
+    #     8: Room(8, 1000, [
+    #         Amphipod(1000, 8, 0, None),
+    #         Amphipod(1, 8, 1, None),
+    #         Amphipod(100, 8, 2, None),
+    #         Amphipod(1, 8, 3, None),
+    #     ])
+    # }
+    return {
+        2: Room(2, 1, [
+            Amphipod(1000, 2, 0, None),
+            Amphipod(1000, 2, 1, None),
+            Amphipod(1000, 2, 2, None),
+            Amphipod(100, 2, 3, None),
+        ]),
+        4: Room(4, 10, [
+            Amphipod(10, 4, 0, None),
+            Amphipod(100, 4, 1, None),
+            Amphipod(10, 4, 2, None),
+            Amphipod(100, 4, 3, None),
+        ]),
+        6: Room(6, 100, [
+            Amphipod(10, 6, 0, None),
+            Amphipod(10, 6, 1, None),
+            Amphipod(1, 6, 2, None),
+            Amphipod(1000, 6, 3, None),
+        ]),
+        8: Room(8, 1000, [
+            Amphipod(1, 8, 0, None),
+            Amphipod(1, 8, 1, None),
+            Amphipod(100, 8, 2, None),
+            Amphipod(1, 8, 3, None),
+        ])
+    }
 
 
 def can_enter_room(amphipod: Amphipod, room: Room) -> bool:
@@ -93,9 +134,7 @@ def can_enter_room(amphipod: Amphipod, room: Room) -> bool:
     if room.is_empty:
         return True
 
-    # FIXXX
-    # return all(a.movement_cost == amphipod.movement_cost for a in room.amphipods if a)
-    return room.lower_amphipod.movement_cost == amphipod.movement_cost
+    return all(a.movement_cost == amphipod.movement_cost for a in room.amphipods if a)
 
 
 def distance_to_hallway(amphipod, hallway_num) -> int:
@@ -119,17 +158,12 @@ def distance_to_room(amphipod: Amphipod, room: Room) -> int:
     if amphipod.room_num:
         distance += amphipod.place_in_room + 1
 
-    # FIXXX
     # Settle in room
     # Find the deepest unoccupied spot
-    # for place, a in enumerate(room.amphipods[::-1]):
-    #     if not a:
-    #         distance += len(room.amphipods) - place
-    #         break
-    if room.lower_amphipod is None:
-        distance += 2
-    else:
-        distance += 1
+    for place, a in enumerate(room.amphipods[::-1]):
+        if not a:
+            distance += len(room.amphipods) - place
+            break
 
     return distance
 
@@ -156,17 +190,14 @@ class Runner:
         if not amphipod.can_move:
             return False
 
-        # FIXXX
         # It can't leave its room if it's blocked in it's room
-        # if amphipod.room_num:
-        #     for a in self.rooms[amphipod.room_num].amphipods:
-        #         if a:
-        #             if a == amphipod:
-        #                 break
-        #             else:
-        #                 return False
-        if amphipod.room_num and amphipod.is_lower and self.rooms[amphipod.room_num].higher_amphipod is not None:
-            return False
+        if amphipod.room_num:
+            for a in self.rooms[amphipod.room_num].amphipods:
+                if a:
+                    if a == amphipod:
+                        break
+                    else:
+                        return False
 
         return True
 
@@ -215,34 +246,19 @@ class Runner:
 
         # Remove it from it's current room or hallway
         if amphipod.room_num:
-            # self.rooms[amphipod.room_num].amphipods[amphipod.place_in_room] = None
-            if amphipod.is_lower:
-                self.rooms[amphipod.room_num].lower_amphipod = None
-            else:
-                self.rooms[amphipod.room_num].higher_amphipod = None
+            self.rooms[amphipod.room_num].amphipods[amphipod.place_in_room] = None
         else:
             self.hallway_occupation[amphipod.hallway_place] = None
 
-        # FIXXX
         # Settle in room
         # Find the deepest unoccupied spot
-        # place = 0
-        # for place, a in enumerate(room.amphipods[::-1]):
-        #     if not a:
-        #         room.amphipods[-1 - place] = amphipod
-        #         break
-        if room.lower_amphipod:
-            place = 0
-            room.higher_amphipod = amphipod
-        else:
-            place = 1
-            room.lower_amphipod = amphipod
-        # room.amphipods[place] = amphipod
+        for place, a in enumerate(room.amphipods[::-1]):
+            if not a:
+                room.amphipods[-1 - place] = amphipod
+                break
 
         amphipod.room_num = room.room_num
-        # FIXXX
-        # amphipod.place_in_room = len(room.amphipods) - 1 - place
-        amphipod.place_in_room = place
+        amphipod.place_in_room = len(room.amphipods) - 1 - place
         amphipod.hallway_place = None
 
         return distance
@@ -251,11 +267,7 @@ class Runner:
         distance = distance_to_hallway(amphipod, hallway_num)
 
         # Remove the amphipod from its room
-        # self.rooms[amphipod.room_num].amphipods[amphipod.place_in_room] = None
-        if amphipod.is_lower:
-            self.rooms[amphipod.room_num].lower_amphipod = None
-        else:
-            self.rooms[amphipod.room_num].higher_amphipod = None
+        self.rooms[amphipod.room_num].amphipods[amphipod.place_in_room] = None
 
         # Put the amphipod in the hallway
         self.hallway_occupation[hallway_num] = amphipod
@@ -268,15 +280,12 @@ class Runner:
 
     def done(self) -> bool:
         for room in self.rooms.values():
-            # FIXXX
             # If we have mixed amphipods we're not done
-            # for a in room.amphipods:
-            #     if not a:
-            #         return False
-            #     if a.movement_cost != room.target_cost:
-            #         return False
-            if room.higher_amphipod is None or room.lower_amphipod is None or room.higher_amphipod.movement_cost != room.lower_amphipod.movement_cost:
-                return False
+            for a in room.amphipods:
+                if not a:
+                    return False
+                if a.movement_cost != room.target_cost:
+                    return False
         return True
 
     def recurse(self, total_move_cost: int, depth=0):
@@ -361,34 +370,34 @@ class Runner:
                             # self.move_stack.pop()
                             # print(self)
 
-    def __str__(self):
-        s = "#############\n"
-        s += "#"
-        for i in range(0, 11):
-            if self.hallway_occupation.get(i):
-                s += self.hallway_occupation[i].color
-            else:
-                s += "."
-        s += "#\n"
-
-        s += "###"
-        for room in self.rooms.values():
-            if room.higher_amphipod:
-                s += room.higher_amphipod.color
-            else:
-                s += "."
-            s += "#"
-        s += "##\n"
-
-        s += "  #"
-        for room in self.rooms.values():
-            if room.lower_amphipod:
-                s += room.lower_amphipod.color
-            else:
-                s += "."
-            s += "#"
-        s += "\n  #########\n"
-        return s
+    # def __str__(self):
+    #     s = "#############\n"
+    #     s += "#"
+    #     for i in range(0, 11):
+    #         if self.hallway_occupation.get(i):
+    #             s += self.hallway_occupation[i].color
+    #         else:
+    #             s += "."
+    #     s += "#\n"
+    #
+    #     s += "###"
+    #     for room in self.rooms.values():
+    #         if room.higher_amphipod:
+    #             s += room.higher_amphipod.color
+    #         else:
+    #             s += "."
+    #         s += "#"
+    #     s += "##\n"
+    #
+    #     s += "  #"
+    #     for room in self.rooms.values():
+    #         if room.lower_amphipod:
+    #             s += room.lower_amphipod.color
+    #         else:
+    #             s += "."
+    #         s += "#"
+    #     s += "\n  #########\n"
+    #     return s
 
     def hashy(self):
         s = ""
@@ -401,9 +410,7 @@ def part_1(path: Path) -> int:
     rooms = parse_input_file(path)
     amphipods = []
     for room in rooms.values():
-        # amphipods.extend(room.amphipods)
-        amphipods.append(room.higher_amphipod)
-        amphipods.append(room.lower_amphipod)
+        amphipods.extend(room.amphipods)
     hallway_places = {i: None for i in [0, 1, 3, 5, 7, 9, 10]}
 
     runner = Runner(amphipods, rooms, hallway_places)
