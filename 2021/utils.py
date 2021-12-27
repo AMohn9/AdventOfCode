@@ -1,7 +1,16 @@
 import operator
 from collections import defaultdict
+from itertools import takewhile
 from pathlib import Path
 from typing import Iterator, List, Tuple, Dict
+
+
+def transpose(mat):
+    return list(list(line) for line in zip(*mat))
+
+
+def take_while_true(g):
+    return takewhile(lambda x: x, g)
 
 
 def read_file_as_ints(path: Path) -> Iterator[int]:
